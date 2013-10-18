@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+* @copyright (c) 2013, Pawel Kazakow <support@xonu.de>
+* @license http://xonu.de/license/ xonu.de EULA
+*/
+-->
+<config>
+	<modules>
+		<Xonu_SBE>
+			<version>2.0.0</version>
+		</Xonu_SBE>
+	</modules>
+	<global>
+        <models>
+            <tax>
+                <rewrite>
+                    <calculation>Xonu_FGP_Model_Calculation</calculation>
+                </rewrite>
+            </tax>
+            <checkout>
+                <rewrite>
+                    <session>Xonu_FGP_Model_Session</session>
+                </rewrite>
+            </checkout>
+        </models>
+    </global>
+</config>

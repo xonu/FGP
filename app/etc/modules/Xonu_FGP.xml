@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+/**
+* @copyright (c) 2013, Pawel Kazakow <support@xonu.de>
+* @license http://xonu.de/license/ xonu.de EULA
+*/
+-->
+<config>
+	<modules>
+		<Xonu_FGP>
+			<active>true</active>
+			<codePool>community</codePool>
+		</Xonu_FGP>     
+	</modules>
+</config>
