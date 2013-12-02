@@ -32,9 +32,9 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 						$quote->getCustomerTaxClassId(),
 						$store
 				);
-							
+
 				return $request;
-			} 
+			}
 			else{
 				return $this->getDefaultDestination();
 			}
@@ -44,15 +44,15 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 			return $this->getDefaultDestination();
 		}
 	}
-	
+
 	public function getSession()
-    {		
+    {
         if ($this->adminSession) {
             return Mage::getSingleton('adminhtml/session_quote'); // order creation in the backend
         } else {
 			return Mage::getSingleton('checkout/session'); // default order creation in the frontend
 		}
-    }	
+    }
 
     // sometimes it is required to use shipping address from the quote instead of the default address
 	public function getRateRequest(
@@ -86,42 +86,40 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 						$billingAddress = $defBilling;
 					} else if ($basedOn == 'shipping' && $defShipping && $defShipping->getCountryId()) {
 						$shippingAddress = $defShipping;
-					} else {
-						if($session->hasQuote() || $this->adminSession)
-						{
-							$quote = $session->getQuote();
-							$isActive = $quote->getIsActive();
-							if($isActive)
-							{
-								$shippingAddress = $quote->getShippingAddress();
-								$billingAddress = $quote->getBillingAddress();
-							}
-							else{
-								$basedOn = 'default';
-							}
-						}
-						else{
-							$basedOn = 'default';
-						}
 					}
-				} else {
-					
-					if($session->hasQuote() || $this->adminSession)
-					{
+				}
+
+				// if still got no address, try to get it from quote
+				if (($basedOn == 'billing' && !$billingAddress) || ($basedOn == 'shipping' && !$shippingAddress)) {
+					if ($session->hasQuote() || $this->adminSession) {
 						$quote = $session->getQuote();
 						$isActive = $quote->getIsActive();
-						if($isActive)
-						{
-							$shippingAddress = $quote->getShippingAddress();
-							$billingAddress = $quote->getBillingAddress();
-						}
-						else {
+
+						if ($isActive) {
+							$quoteBillingAddress = $quote->getBillingAddress();
+							$quoteShippingAddress = $quote->getShippingAddress();
+
+							// check if the addresses have a country
+							if ($basedOn == 'billing' && $quoteBillingAddress && $quoteBillingAddress->getCountryId()) {
+								$billingAddress = $quoteBillingAddress;
+							} else if ($basedOn == 'shipping' && $quoteShippingAddress && $quoteShippingAddress->getCountryId()) {
+								$shippingAddress = $quoteShippingAddress;
+							} else {
+								$basedOn = 'default';
+							}
+						} else {
 							$basedOn = 'default';
 						}
-					}
-					else {
+					} else {
 						$basedOn = 'default';
 					}
+				}
+
+				// if we got an address, but it has no country, calculate tax based on default
+				if (($basedOn == 'billing' && $billingAddress && !$billingAddress->getCountryId())
+					|| ($basedOn == 'shipping' && $shippingAddress && !$shippingAddress->getCountryId())
+				) {
+					$basedOn = 'default';
 				}
 			}
 		}
