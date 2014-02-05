@@ -7,11 +7,6 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 {
     protected $adminSession = false;
 
-    private function log($msg) {
-        $log = file_get_contents('/log.txt');
-        file_put_contents( '/log.txt', $log . "\n" . $msg);
-    }
-
     // set origin to destination
 	public function getRateOriginRequest($store = null)
 	{
@@ -35,9 +30,25 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 
 				return $request;
 			}
-			else{
-				return $this->getDefaultDestination();
-			}
+            if (Mage::getSingleton('customer/session')->isLoggedIn()) {
+
+                $customer = Mage::getSingleton('customer/session')->getCustomer();
+                if (($billingAddress = $customer->getDefaultBillingAddress())
+                    && ($shippingAddress = $customer->getDefaultShippingAddress())) {
+
+                    // use destination of the existing quote as origin if quote exists
+                    $request = $this->getRateRequest(
+                        $shippingAddress,
+                        $billingAddress,
+                        $customer->getTaxClassId(),
+                        $store
+                    );
+
+                    return $request;
+                }
+            }
+
+            return $this->getDefaultDestination();
 		}
 		else // quote is not available when switching the currency
 		{
@@ -86,40 +97,42 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 						$billingAddress = $defBilling;
 					} else if ($basedOn == 'shipping' && $defShipping && $defShipping->getCountryId()) {
 						$shippingAddress = $defShipping;
-					}
-				}
-
-				// if still got no address, try to get it from quote
-				if (($basedOn == 'billing' && !$billingAddress) || ($basedOn == 'shipping' && !$shippingAddress)) {
-					if ($session->hasQuote() || $this->adminSession) {
-						$quote = $session->getQuote();
-						$isActive = $quote->getIsActive();
-
-						if ($isActive) {
-							$quoteBillingAddress = $quote->getBillingAddress();
-							$quoteShippingAddress = $quote->getShippingAddress();
-
-							// check if the addresses have a country
-							if ($basedOn == 'billing' && $quoteBillingAddress && $quoteBillingAddress->getCountryId()) {
-								$billingAddress = $quoteBillingAddress;
-							} else if ($basedOn == 'shipping' && $quoteShippingAddress && $quoteShippingAddress->getCountryId()) {
-								$shippingAddress = $quoteShippingAddress;
-							} else {
+					} else {
+						if($session->hasQuote() || $this->adminSession)
+						{
+							$quote = $session->getQuote();
+							$isActive = $quote->getIsActive();
+							if($isActive)
+							{
+								$shippingAddress = $quote->getShippingAddress();
+								$billingAddress = $quote->getBillingAddress();
+							}
+							else{
 								$basedOn = 'default';
 							}
-						} else {
+						}
+						else{
 							$basedOn = 'default';
 						}
-					} else {
+					}
+				} else {
+
+					if($session->hasQuote() || $this->adminSession)
+					{
+						$quote = $session->getQuote();
+						$isActive = $quote->getIsActive();
+						if($isActive)
+						{
+							$shippingAddress = $quote->getShippingAddress();
+							$billingAddress = $quote->getBillingAddress();
+						}
+						else {
+							$basedOn = 'default';
+						}
+					}
+					else {
 						$basedOn = 'default';
 					}
-				}
-
-				// if we got an address, but it has no country, calculate tax based on default
-				if (($basedOn == 'billing' && $billingAddress && !$billingAddress->getCountryId())
-					|| ($basedOn == 'shipping' && $shippingAddress && !$shippingAddress->getCountryId())
-				) {
-					$basedOn = 'default';
 				}
 			}
 		}
@@ -160,8 +173,6 @@ class Xonu_FGP_Model_Calculation extends Mage_Tax_Model_Calculation
 
 	private function getDefaultDestination($store = null)
 	{
-        $this->log('default dest');
-
         $address = new Varien_Object();
 		$request = new Varien_Object();
 
