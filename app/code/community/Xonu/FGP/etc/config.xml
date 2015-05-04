@@ -7,9 +7,9 @@
 -->
 <config>
 	<modules>
-		<Xonu_SBE>
+		<Xonu_FGP>
 			<version>2.0.0</version>
-		</Xonu_SBE>
+		</Xonu_FGP>
 	</modules>
 	<global>
         <models>
