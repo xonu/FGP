@@ -1,0 +1,16 @@
+{
+    "name":"xonu/fgp",
+    "type":"magento-module",
+    "license":"http://xonu.de/license/",
+    "homepage":"https://github.com/xonu/FGP",
+    "description":"This extension will fix the gross price such that all customers pay the same while calculating country-specific tax rate.",
+    "authors":[
+        {
+            "name":"Pawel Kazakow",
+            "email":"support@xonu.de"
+        }
+    ],
+    "require":{
+        "magento-hackathon/magento-composer-installer":"*"
+    }
+}
